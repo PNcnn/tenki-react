@@ -31,10 +31,21 @@ function mapStateToProps(state) {
   };
 }
 
+async function getweatherdata(place){
+  const appid ='f48d28e89819515c1b2f219c5bb5bca4'
+  const url = 'https://api.openweathermap.org/data/2.5/weather?q='+ place +'&appid='+ appid
+
+  const response = await fetch(url)
+  const weatherdata = await response.json()
+  const weather = weatherdata.weather
+  console.log(weather[0])
+  return weather
+}
+
 function mapDispatchToProps(dispatch) {
   return {
-    onClick(price,data,weather){
-      dispatch(addTax(price,data,weather));
+    onClick(price){
+      dispatch(addTax(getweatherdata(price)));
     }
   };
 }
@@ -48,12 +59,11 @@ let AppContainer = connect(
 
 // ActionCreator
 const ADDTAX = 'ADDTAX';
-function addTax(price,data,weather) {
+function addTax(data) {
+  console.log(data)
   return {
     type: ADDTAX,
-    price,
-    data,
-    weather
+    data
   };
 }
 
@@ -62,22 +72,8 @@ function addTax(price,data,weather) {
 function appReducer(state, action) {
   switch (action.type) {
     case 'ADDTAX':
-      const appid ='f48d28e89819515c1b2f219c5bb5bca4'
-      const url = 'https://api.openweathermap.org/data/2.5/weather?q='+ action.price +'&appid='+ appid
-      fetch(url)
-      .then(response => response.json())
-      .then(data =>
-        state.data = data
-      );
 
-      state.price = action.price
-
-      if(state.data.weather){
-        console.log(state.data.weather[0].description)
-        state.weather = state.data.weather[0].description
-      }
-
-      console.log(state)
+      console.log(action.data)
 
       return {
         data: state.data,
