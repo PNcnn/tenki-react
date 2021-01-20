@@ -16,7 +16,7 @@ class AppComponents extends React.Component {
         <input type="text" defaultValue="" ref="inputText" />
         <button onClick={this.send.bind(this)}>計算</button>
         <br />
-        {this.props.price}<br />
+        {this.props.place}<br />
         {this.props.weather}
       </div>
     );
@@ -25,7 +25,7 @@ class AppComponents extends React.Component {
 
 function mapStateToProps(state) {
   return {
-    price: state.price,
+    place: state.place,
     data: state.data,
     weather: state.weather
   };
@@ -37,15 +37,16 @@ async function getweatherdata(place){
 
   const response = await fetch(url)
   const weatherdata = await response.json()
-  const weather = weatherdata.weather
-  console.log(weather[0])
-  return weather
+  return Promise.resolve(weatherdata)
 }
 
 function mapDispatchToProps(dispatch) {
   return {
-    onClick(price){
-      dispatch(addTax(getweatherdata(price)));
+    onClick(place){
+      getweatherdata(place).then(result =>{
+        dispatch(getWeather(result))
+        }
+      )
     }
   };
 }
@@ -58,11 +59,10 @@ let AppContainer = connect(
 
 
 // ActionCreator
-const ADDTAX = 'ADDTAX';
-function addTax(data) {
-  console.log(data)
+const GETWEATHER = 'GETWEATHER';
+function getWeather(data) {
   return {
-    type: ADDTAX,
+    type: GETWEATHER,
     data
   };
 }
@@ -71,14 +71,16 @@ function addTax(data) {
 // Reducer
 function appReducer(state, action) {
   switch (action.type) {
-    case 'ADDTAX':
+    case 'GETWEATHER':
 
       console.log(action.data)
 
+      const weather = action.data.weather[0]
+
       return {
         data: state.data,
-        price: state.price,
-        weather: state.weather
+        place: action.data.name,
+        weather: weather.description
       }
 
     default:
@@ -89,7 +91,7 @@ function appReducer(state, action) {
 
 //state初期化
 const initialState = {
-  price: '',
+  place: '',
   data: [],
   weather: ''
 };
