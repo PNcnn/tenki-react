@@ -1,11 +1,33 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { createStore } from 'redux'
+import { createStore, applyMiddleware, Store, AnyAction } from 'redux'
 import { Provider, connect } from 'react-redux'
 
-//Presentational Components
-class AppComponents extends React.Component {
+import appReducer from './reducers'
+import getWeather from './actions'
+import rootSaga from './sagas'
+import createSagaMiddleware, { SagaMiddleware } from 'redux-saga'
 
+const sagaMiddleware = createSagaMiddleware()
+
+const initialState = {
+  place: '',
+  data: [],
+  weather: ''
+};
+
+const configureStore = () => {
+  const store = createStore(
+    appReducer,
+    initialState,
+    applyMiddleware(sagaMiddleware))
+  sagaMiddleware.run(rootSaga)
+  return store
+}
+
+const store = configureStore()
+
+class AppComponents extends React.Component {
   send(e){
     this.props.onClick(this.refs.inputText.value);
   }
@@ -23,6 +45,14 @@ class AppComponents extends React.Component {
   }
 }
 
+function mapDispatchToProps(dispatch) {
+  return {
+    onClick(place){
+        dispatch(getWeather(place))
+      }
+    };
+  }
+
 function mapStateToProps(state) {
   return {
     place: state.place,
@@ -31,78 +61,15 @@ function mapStateToProps(state) {
   };
 }
 
-async function getweatherdata(place){
-  const appid ='f48d28e89819515c1b2f219c5bb5bca4'
-  const url = 'https://api.openweathermap.org/data/2.5/weather?q='+ place +'&appid='+ appid
-
-  const response = await fetch(url)
-  const weatherdata = await response.json()
-  return Promise.resolve(weatherdata)
-}
-
-function mapDispatchToProps(dispatch) {
-  return {
-    onClick(place){
-      getweatherdata(place).then(result =>{
-        dispatch(getWeather(result))
-        }
-      )
-    }
-  };
-}
-
 let AppContainer = connect(
   mapStateToProps,
   mapDispatchToProps
 )(AppComponents);
 
-
-
-// ActionCreator
-const GETWEATHER = 'GETWEATHER';
-function getWeather(data) {
-  return {
-    type: GETWEATHER,
-    data
-  };
-}
-
-
-// Reducer
-function appReducer(state, action) {
-  switch (action.type) {
-    case 'GETWEATHER':
-
-      console.log(action.data)
-
-      const weather = action.data.weather[0]
-
-      return {
-        data: state.data,
-        place: action.data.name,
-        weather: weather.description
-      }
-
-    default:
-      return state
-  }
-}
-
-
-//state初期化
-const initialState = {
-  place: '',
-  data: [],
-  weather: ''
-};
-
-//store作成
-const store = createStore(appReducer, initialState);
-
 //レンダリング
 ReactDOM.render(
   <Provider store={store}>
-    <AppContainer />
+  <AppContainer />
   </Provider>,
   document.getElementById('root')
 );
