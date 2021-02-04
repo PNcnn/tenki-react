@@ -36,7 +36,7 @@ class AppComponents extends React.Component {
     return (
       <div>
         <input type="text" defaultValue="" ref="inputText" />
-        <button onClick={this.send.bind(this)}>計算</button>
+        <button onClick={this.send.bind(this)}>表示</button>
         <br />
         {this.props.place}<br />
         {this.props.weather}
